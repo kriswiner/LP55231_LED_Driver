@@ -346,7 +346,7 @@ void hueToRGB(uint8_t hue, uint8_t brightness)
 
 
 
-// I2C read/write functions for the MPU6500 and AK8963 sensors
+// I2C read/write functions  
 
         void writeByte(uint8_t address, uint8_t subAddress, uint8_t data)
 {

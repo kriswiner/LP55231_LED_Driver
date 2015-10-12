@@ -102,6 +102,20 @@
 
 #define LP55231_Address         0x32   // Address of the LP55231
 
+// map leds to LP55231 pin numbers
+#define R1 D7_PWM  
+#define R2 D8_PWM
+#define R3 D9_PWM
+#define G1 D4_PWM
+#define G2 D5_PWM
+#define G3 D2_PWM
+#define B1 D1_PWM
+#define B2 D6_PWM
+#define B3 D3_PWM
+
+// define current for all leds
+#define CURRENT 0x0A  // eight bits in increments of 100 microAmps, A = 1 mA per led = 9 mA if all on
+
 const boolean invert = false; // set true if common anode, false if common cathode
 
 uint8_t color = 0;        // a value from 0 to 255 representing the hue
@@ -125,31 +139,36 @@ void setup()
   
 
   // Set PWM output
-   writeByte(LP55231_Address, D1_PWM, 0x40);
-   writeByte(LP55231_Address, D2_PWM, 0x20);
-   writeByte(LP55231_Address, D3_PWM, 0x80);
-   writeByte(LP55231_Address, D4_PWM, 0x40);
-   writeByte(LP55231_Address, D5_PWM, 0x20);
-   writeByte(LP55231_Address, D6_PWM, 0x80);
-   writeByte(LP55231_Address, D7_PWM, 0x40);
-   writeByte(LP55231_Address, D8_PWM, 0x20);
-   writeByte(LP55231_Address, D9_PWM, 0x80);
+   writeByte(LP55231_Address, R1, 0x20);  // 255 steps of PWM from 0 % (0x00) to 100% (0xFF)
+   writeByte(LP55231_Address, G1, 0x20);
+   writeByte(LP55231_Address, B1, 0xC0);
+   writeByte(LP55231_Address, R2, 0x20);
+   writeByte(LP55231_Address, G2, 0x20);
+   writeByte(LP55231_Address, B2, 0xC0);
+   writeByte(LP55231_Address, R3, 0x20);
+   writeByte(LP55231_Address, G3, 0x20);
+   writeByte(LP55231_Address, B3, 0xC0);
 
   // Set current output
-   writeByte(LP55231_Address, D1_CURRENT_CONTROL, 0x0A);
-   writeByte(LP55231_Address, D2_CURRENT_CONTROL, 0x09);
-   writeByte(LP55231_Address, D3_CURRENT_CONTROL, 0x0B);
-   writeByte(LP55231_Address, D4_CURRENT_CONTROL, 0x0A);
-   writeByte(LP55231_Address, D5_CURRENT_CONTROL, 0x09);
-   writeByte(LP55231_Address, D6_CURRENT_CONTROL, 0x0B);
-   writeByte(LP55231_Address, D7_CURRENT_CONTROL, 0x0A);
-   writeByte(LP55231_Address, D8_CURRENT_CONTROL, 0x09);
-   writeByte(LP55231_Address, D9_CURRENT_CONTROL, 0x0B);
+   writeByte(LP55231_Address, D1_CURRENT_CONTROL, CURRENT);
+   writeByte(LP55231_Address, D2_CURRENT_CONTROL, CURRENT);
+   writeByte(LP55231_Address, D3_CURRENT_CONTROL, CURRENT);
+   writeByte(LP55231_Address, D4_CURRENT_CONTROL, CURRENT);
+   writeByte(LP55231_Address, D5_CURRENT_CONTROL, CURRENT);
+   writeByte(LP55231_Address, D6_CURRENT_CONTROL, CURRENT);
+   writeByte(LP55231_Address, D7_CURRENT_CONTROL, CURRENT);
+   writeByte(LP55231_Address, D8_CURRENT_CONTROL, CURRENT);
+   writeByte(LP55231_Address, D9_CURRENT_CONTROL, CURRENT);
 
   // configure temperature sensor
   writeByte(LP55231_Address, TEMP_ADC_CONTROL, 0x06); // continuous conversion 
 
-  // test of led function
+  // start with all leds off
+  writeByte(LP55231_Address, OUTPUT_ON_OFF_CNTL_MSB, 0x00); // D9 led enabled by bit 0 here
+  writeByte(LP55231_Address, OUTPUT_ON_OFF_CNTL_LSB, 0x00); // D1 - D8 enabled by eight bits here
+  delay(1000);
+
+  // test of led function, sweep through pins D1 - D9 one at a time
   for (int ii = 0; ii < 8; ii++)
   {
   writeByte(LP55231_Address, OUTPUT_ON_OFF_CNTL_LSB, 1 << ii);
@@ -164,7 +183,7 @@ void setup()
  // start with all leds off
   writeByte(LP55231_Address, OUTPUT_ON_OFF_CNTL_MSB, 0x00); 
   writeByte(LP55231_Address, OUTPUT_ON_OFF_CNTL_LSB, 0x00);
-  
+  delay(1000);
 }
 
 
@@ -173,46 +192,46 @@ void loop()
 
     checkTemp();
 
-    writeByte(LP55231_Address, OUTPUT_ON_OFF_CNTL_LSB, 0x07);
+    writeByte(LP55231_Address, OUTPUT_ON_OFF_CNTL_LSB, 0x49);
     for (color = 0; color < 255; color++) { // Slew through the color spectrum
 
     hueToRGB(color, brightness);  // call function to convert hue to RGB
 
     // write the RGB values to the pins
-    writeByte(LP55231_Address, D1_PWM, R);
-    writeByte(LP55231_Address, D2_PWM, G);
-    writeByte(LP55231_Address, D3_PWM, B);
+    writeByte(LP55231_Address, R1, R);
+    writeByte(LP55231_Address, G1, G);
+    writeByte(LP55231_Address, B1, B);
   
     delay(100);
     }
 
     checkTemp();
 
-    writeByte(LP55231_Address, OUTPUT_ON_OFF_CNTL_LSB, 0x38);
+    writeByte(LP55231_Address, OUTPUT_ON_OFF_CNTL_LSB, 0xB0);
     for (color = 0; color < 255; color++) { // Slew through the color spectrum
 
     hueToRGB(color, brightness);  // call function to convert hue to RGB
 
     // write the RGB values to the pins
-    writeByte(LP55231_Address, D4_PWM, R);
-    writeByte(LP55231_Address, D5_PWM, G);
-    writeByte(LP55231_Address, D6_PWM, B);
+    writeByte(LP55231_Address, R2, R);
+    writeByte(LP55231_Address, G2, G);
+    writeByte(LP55231_Address, B2, B);
   
     delay(100);
     }
 
     checkTemp();
 
-    writeByte(LP55231_Address, OUTPUT_ON_OFF_CNTL_LSB, 0xC0);
+    writeByte(LP55231_Address, OUTPUT_ON_OFF_CNTL_LSB, 0x06);
     writeByte(LP55231_Address, OUTPUT_ON_OFF_CNTL_MSB, 0x01);
     for (color = 0; color < 255; color++) { // Slew through the color spectrum
 
     hueToRGB(color, brightness);  // call function to convert hue to RGB
 
     // write the RGB values to the pins
-    writeByte(LP55231_Address, D7_PWM, R);
-    writeByte(LP55231_Address, D8_PWM, G);
-    writeByte(LP55231_Address, D9_PWM, B);
+    writeByte(LP55231_Address, R3, R);
+    writeByte(LP55231_Address, G3, G);
+    writeByte(LP55231_Address, B3, B);
   
     delay(100);
     }
@@ -233,7 +252,7 @@ void checkTemp()
 {
   // read temperature
     int8_t temp = readByte(LP55231_Address, TEMPERATURE_READ);
-    Serial.print("Temperature of LP55231 is "); Serial.print(temp); Serial.println(" degrees");
+    Serial.print("Temperature of LP55231 is "); Serial.print(temp); Serial.println(" degrees Centigrade");
     if(temp > 38) {
       // if temperature too high, turn all leds off!
          writeByte(LP55231_Address, OUTPUT_ON_OFF_CNTL_MSB, 0x00); 
